@@ -94,7 +94,7 @@ export struct PlayPlayer {
   inactivityTimerId: number | undefined; // 定时器ID
   INACTIVITY_THRESHOLD = 5000
   @Consume
-  isUserPaused:boolean
+  isUserPaused: boolean
 
   aboutToAppear(): void {
     if (this.controls == true) {
@@ -345,11 +345,10 @@ export struct PlayPlayer {
             .margin({ left: 5 })
             .onChange((value: number, mode: SliderChangeMode) => {
               let seekValue: number = value
-              if(this.repeat && value == this.duration)
-              {
+              if (this.repeat && value == this.duration) {
                 return
               }
-              if(this.repeat == false && value == this.duration){
+              if (this.repeat == false && value == this.duration) {
                 seekValue = 0
                 this.startSecond = seekValue
                 this.playVideoModel?.setSeekTime(seekValue)
@@ -357,9 +356,11 @@ export struct PlayPlayer {
                 return
               }
               // 修复循环播放时卡在最后一帧
-              setTimeout(
-                () => this.playVideoModel?.setSeekTime(seekValue)
-                , 100);
+              if (mode == SliderChangeMode.End || mode == SliderChangeMode.Click) {
+                setTimeout(
+                  () => this.playVideoModel?.setSeekTime(seekValue)
+                  , 100)
+              }
             })
 
           Text(this.formatSecondsToString(this.duration))
