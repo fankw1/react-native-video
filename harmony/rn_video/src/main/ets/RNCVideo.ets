@@ -257,6 +257,10 @@ export struct RNCVideo {
   }
 
   onVideoEnd(): void {
+    if(this.repeat == undefined || this.repeat == false)
+    {
+        this.paused = true
+    }
     if (this.ctx) {
       this.ctx.rnInstance.emitComponentEvent(this.descriptor.tag, RNC_VIDEO_TYPE, {
         type: "onVideoEnd"
