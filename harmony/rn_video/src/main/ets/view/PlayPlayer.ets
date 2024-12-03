@@ -54,7 +54,6 @@ const TAG: string = 'RNOH in ctrl'
 
 @Component
 export struct PlayPlayer {
-  private playVideoModel: VideoController | undefined = undefined;
   @Consume('srcVar') @Watch("onSrcChanged") srcParam: string; // 视频src
   @Consume index: number;
   @Consume('mutedVar') @Watch("onMutedChanged") muted: boolean;
@@ -72,17 +71,13 @@ export struct PlayPlayer {
   /* 不需要显示 */
   @State volumeShow: boolean = PlayConstants.PLAY_PAGE.VOLUME_SHOW;
   @State brightShow: boolean = PlayConstants.PLAY_PAGE.BRIGHT_SHOW;
-  private xComponentController: XComponentController = new XComponentController();
-  private surfaceID: number = 0;
   @Consume videoHeight: number | string;
   @Consume videoWidth: number | string;
   @State videoJustifyContent: FlexAlign = FlexAlign.Center;
   @State videoAlignItems: HorizontalAlign = HorizontalAlign.Center;
   @State matrix: object = Matrix4.identity();
-  private previousSrc: fs.File | string | undefined = undefined
   viewWidth: number = 0;
   viewHeight: number = 0;
-  private orientationChange: boolean = true;
   listener = mediaquery.matchMediaSync('(orientation: landscape)');
   @State sliderWidth: number | string = '80%'
   screenWidth: number = 0
@@ -95,6 +90,13 @@ export struct PlayPlayer {
   INACTIVITY_THRESHOLD = 5000
   @Consume
   isUserPaused: boolean
+  private playVideoModel: VideoController | undefined = undefined;
+  private xComponentController: XComponentController = new XComponentController();
+  private surfaceID: number = 0;
+  private previousSrc: fs.File | string | undefined = undefined
+  private orientationChange: boolean = true;
+  private isProgressSliding: boolean = false
+  private sliderTimer: number = 0
 
   aboutToAppear(): void {
     if (this.controls == true) {
@@ -345,21 +347,38 @@ export struct PlayPlayer {
             .margin({ left: 5 })
             .onChange((value: number, mode: SliderChangeMode) => {
               let seekValue: number = value
-              if (this.repeat && value == this.duration) {
-                return
-              }
-              if (this.repeat == false && value == this.duration) {
-                seekValue = 0
-                this.startSecond = seekValue
-                this.playVideoModel?.setSeekTime(seekValue)
-                this.paused = true
-                return
-              }
-              // 修复循环播放时卡在最后一帧
+              //滑块滑动结束后再设置seek
               if (mode == SliderChangeMode.End || mode == SliderChangeMode.Click) {
+                if (this.repeat && value == this.duration) {
+                  return
+                }
+                if ((this.repeat == undefined || this.repeat == false) && value == this.duration) {
+                  seekValue = 0
+                  //判断是否手动触发滑块，如果是就设置seek
+                  if (this.isProgressSliding) {
+                    this.startSecond = seekValue
+                    this.playVideoModel?.setSeekTime(seekValue)
+                    this.paused = true
+                    return
+                   //判断是否手动触发滑块，如果不是就直接返回
+                  } else {
+                    return
+                  }
+                }
                 setTimeout(
                   () => this.playVideoModel?.setSeekTime(seekValue)
-                  , 100)
+                  , 100);
+              }
+            })
+            .onTouch((event: TouchEvent) => {
+              //判断手松开再设置seek,增加一个定时器
+              if (event.type === TouchType.Up) {
+                this.sliderTimer = setTimeout(() => {
+                  this.isProgressSliding = false;
+                }, 200);
+              } else {
+                clearTimeout(this.sliderTimer);
+                this.isProgressSliding = true;
               }
             })
 
