@@ -90,18 +90,13 @@ export interface IRNCVideo {
   onVideoEnd: () => void
   onVideoError: (err: string) => void
 }
-
 const TAG: string = 'RNOH in RNCVideo'
-
-
 @Component
 export struct RNCVideo {
   ctx!: RNOHContext;
   tag: number = -1;
   @State descriptor: VideoViewDescriptor = Object() as VideoViewDescriptor;
-  private callbackList: Array<() => void> = []
   @State videoMargin: string = PlayConstants.PLAY_PAGE.MARGIN_ZERO;
-  private playVideoModel: VideoController = new VideoController();
   @Provide('controlsVar') controls: boolean = false;
   @Provide('srcVar') srcParam: string | media.AVFileDescriptor = ''; /*最终avplayer认识的 字符串*/
   @Provide index: number = 0;
@@ -113,7 +108,6 @@ export struct RNCVideo {
   @Provide('disableFocusVar') disableFocus: boolean = false; /* RN侧默认是独占模式传递FALSE过来，鸿蒙默认未共享模式*/
   @Provide('preventsDisplaySleepDuringVideoPlaybackVar') preventsDisplaySleepDuringVideoPlayback: boolean =
     true; /* 默认true*/
-  private isResume: boolean = false;
   @State
   viewWidth: number = 0;
   @State
@@ -132,6 +126,9 @@ export struct RNCVideo {
   startSecond: number = 0
   @Provide
   duration: number = 0
+  private callbackList: Array<() => void> = []
+  private playVideoModel: VideoController = new VideoController();
+  private isResume: boolean = false;
 
   aboutToAppear(): void {
 
@@ -166,32 +163,15 @@ export struct RNCVideo {
       }
     })
     )
-
-    observer.on('navDestinationUpdate', (info) => {
-      let navDestinationInfo = JSON.stringify(info)
-      let navDestinationState = JSON.parse(navDestinationInfo) as NavDestinationState
-      let state = navDestinationState.state
-      let index = navDestinationState.index
-      //index 是 Navigation 的页面值  video 当前的页面 == 1, state表示当前页面的状态,ON_HIDDEN 为页面隐藏,ON_SHOWN为页面显示
-      if ((index == 1 || index == 0) && state == observer.NavDestinationState.ON_HIDDEN) {
-        this.paused = true
-      }
-      if ((index == 1 || index == 0) && state == observer.NavDestinationState.ON_SHOWN) {
-        if (this.isUserPaused) {
-          this.paused = true
-        } else {
-          this.paused = false
-        }
-
-      }
-    });
-
+    //注册 navDestinationCallback
+    observer.on('navDestinationUpdate', this.navDestinationCallback);
   }
 
   aboutToDisappear(): void {
     this.cancellationCallback()
     this.playVideoModel.release();
-    observer.off('navDestinationUpdate');
+    //销毁 navDestinationCallback
+    observer.off('navDestinationUpdate', this.navDestinationCallback);
   }
 
   registerCommandCallback(): void {
@@ -257,9 +237,8 @@ export struct RNCVideo {
   }
 
   onVideoEnd(): void {
-    if(this.repeat == undefined || this.repeat == false)
-    {
-        this.paused = true
+    if (this.repeat == undefined || this.repeat == false) {
+      this.paused = true
     }
     if (this.ctx) {
       this.ctx.rnInstance.emitComponentEvent(this.descriptor.tag, RNC_VIDEO_TYPE, {
@@ -364,6 +343,25 @@ export struct RNCVideo {
         .align(Alignment.Center)
         .height(this.viewHeight)
         .width(this.viewWidth)
+    }
+  }
+
+  private navDestinationCallback: Callback<NavDestinationInfo> = (info) => {
+    let navDestinationInfo = JSON.stringify(info)
+    let navDestinationState = JSON.parse(navDestinationInfo) as NavDestinationState
+    let state = navDestinationState.state
+    let index = navDestinationState.index
+    //index 是 Navigation 的页面值  video 当前的页面 == 1, state表示当前页面的状态,ON_HIDDEN 为页面隐藏,ON_SHOWN为页面显示
+    if ((index == 1 || index == 0) && state == observer.NavDestinationState.ON_HIDDEN) {
+      this.paused = true
+    }
+    if ((index == 1 || index == 0) && state == observer.NavDestinationState.ON_SHOWN) {
+      if (this.isUserPaused) {
+        this.paused = true
+      } else {
+        this.paused = false
+      }
+
     }
   }
 }
