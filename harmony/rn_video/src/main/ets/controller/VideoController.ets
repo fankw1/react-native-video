@@ -195,6 +195,7 @@ export class VideoController {
           this.onReadyForDisplay();
           break;
         case AvplayerStatus.PLAYING:
+          this.onReadyForDisplay();
           this.status = CommonConstants.STATUS_START;
           this.watchStatus();
           break;
