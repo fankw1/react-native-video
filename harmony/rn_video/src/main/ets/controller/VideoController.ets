@@ -93,12 +93,16 @@ export class VideoController {
    */
   bindState(): void {
     Logger.debug(TAG, `bindState`);
+    let lastCalledTime = 0;
+    const interval = 500;
     if (this.avPlayer) {
-
       this.onStateChange();
-
       this.avPlayer.on(Events.TIME_UPDATE, (time: number) => {
-        this.onVideoProgress(time);
+        const currentTime = new Date().getTime();
+        if(currentTime-lastCalledTime >= interval){
+          this.onVideoProgress(time);
+          lastCalledTime = currentTime;
+        }
       });
 
       this.avPlayer.on(Events.DURATION_UPDATE, (durationA) => {
