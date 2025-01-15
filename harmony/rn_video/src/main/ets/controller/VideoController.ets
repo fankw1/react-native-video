@@ -300,7 +300,12 @@ export class VideoController {
         this.avPlayer.fdSrc = this.url;
       }
     } else {
-      this.avPlayer.reset();
+      this.avPlayer.stop().then(
+        ()=>{
+          this.avPlayer.reset();
+        }
+      )
+
     }
     Logger.debug(TAG, `switchVideo,  state11 ${JSON.stringify(this.avPlayer.state)}`);
   }
@@ -403,11 +408,15 @@ export class VideoController {
   updateProp(): void {
     /* 设置 需要特定状态下设置*/
     if (this.avPlayer != null) {
-      Logger.debug(TAG, `updateProp volume, ${JSON.stringify(this.playerThis.volume)}`);
-      this.avPlayer.setVolume(this.playerThis.volume); /* 更新音量 */
-      Logger.debug(TAG, `updateProp resizeMode, ${JSON.stringify(this.playerThis.resizeMode)}`);
-      /* 更新 resizeMode */
-      this.convertResizeMode(this.playerThis.resizeMode);
+      if(this.status !== CommonConstants.STATUS_INITIALIZED)
+      {
+        Logger.debug(TAG, `updateProp volume, ${JSON.stringify(this.playerThis.volume)}`);
+        this.avPlayer.setVolume(this.playerThis.volume); /* 更新音量 */
+        Logger.debug(TAG, `updateProp resizeMode, ${JSON.stringify(this.playerThis.resizeMode)}`);
+        /* 更新 resizeMode */
+        this.convertResizeMode(this.playerThis.resizeMode);
+      }
+
       /* 更新音频流类型 */
       this.watchStatus();
     } else {
