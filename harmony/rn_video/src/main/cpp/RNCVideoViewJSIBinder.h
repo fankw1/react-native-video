@@ -33,6 +33,7 @@ class RNCVideoViewJSIBinder : public ViewComponentJSIBinder{
         object.setProperty(rt, "src", "object");
 //        object.setProperty(rt, "srcType", "string");
         object.setProperty(rt, "controls", "boolean");
+        object.setProperty(rt, "fullscreen", "boolean");
         object.setProperty(rt, "paused", "boolean");
         object.setProperty(rt, "muted", "boolean");
         object.setProperty(rt, "repeat", "boolean");

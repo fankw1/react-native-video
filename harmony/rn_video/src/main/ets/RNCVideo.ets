@@ -58,6 +58,7 @@ class RNCVideoSrc {
 
 export interface RNCVideoProps extends ViewBaseProps {
   controls: boolean
+  fullscreen:boolean
   src: RNCVideoSrc
   paused: boolean
   resizeMode: string
@@ -101,6 +102,7 @@ export struct RNCVideo {
   @Provide('srcVar') srcParam: string | media.AVFileDescriptor = ''; /*最终avplayer认识的 字符串*/
   @Provide index: number = 0;
   @Provide('mutedVar') muted: boolean = false;
+  @Provide('fullscreenVar') fullscreen: boolean = false;
   @Provide('repeatVar') repeat: boolean = false;
   @Provide('pausedVar') paused: boolean = false;
   @Provide('resizeModeVar') resizeMode: string = "none"; /* */
@@ -192,6 +194,7 @@ export struct RNCVideo {
     this.paused = this.descriptor.rawProps.paused
     this.isUserPaused = this.descriptor.rawProps.paused
     this.controls = this.descriptor.rawProps.controls
+    this.fullscreen = this.descriptor.rawProps.fullscreen
     this.resizeMode = this.descriptor.rawProps.resizeMode
     this.repeat = this.descriptor.rawProps.repeat !== undefined?this.descriptor.rawProps.repeat:false;
     this.volume = this.descriptor.rawProps.volume !== undefined?this.descriptor.rawProps.volume:0.0;
